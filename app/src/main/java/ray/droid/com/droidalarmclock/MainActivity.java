@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
             DroidPreferences.SetInteger(context, "timePickerHour", timePicker.getCurrentHour());
             DroidPreferences.SetInteger(context, "timePickerMinute", timePicker.getCurrentMinute());
 
-            alarmIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            alarmIntent = PendingIntent.getBroadcast(context, 0, intent, Others.GetPendingIntentFlags());
 
             Calendar calendar = Calendar.getInstance();
 

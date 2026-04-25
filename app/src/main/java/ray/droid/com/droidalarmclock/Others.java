@@ -8,6 +8,7 @@ import android.media.AudioAttributes;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.widget.Toast;
 
 import static android.content.Context.ALARM_SERVICE;
@@ -28,7 +29,7 @@ public class Others {
                 context,
                 0,
                 mIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                GetPendingIntentFlags()
         );
 
         try {
@@ -36,6 +37,14 @@ public class Others {
         } catch (Exception ex) {
             Toast.makeText(context, "Não foi possivel cancelar o alarme. " + ex.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public static int GetPendingIntentFlags() {
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        return flags;
     }
 
 
