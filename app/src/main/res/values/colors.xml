@@ -12,6 +12,8 @@
     <color name="oneUiBlue">#4B8DFF</color>
     <color name="oneUiBlueDark">#256DFF</color>
     <color name="oneUiDroidBatteryVoice">#5A58EB</color>
+    <color name="oneUiAlarmOrange">#E85C08</color>
+    <color name="oneUiAlarmOrangeDark">#C74700</color>
     <color name="oneUiStroke">#2B2D35</color>
 
     <color name="black_overlay">#66000000</color>

@@ -148,46 +148,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void SetAlarm() {
         try {
-            AlarmManager alarmMgr;
-            PendingIntent alarmIntent;
-
-            alarmMgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-
-            Intent intent = new Intent(context, AlarmBroadcast.class);
-
             ArrayList<Integer> daysOfWeek = SetDaysOfWeek();
-            intent.putIntegerArrayListExtra("DaysOfWeek",daysOfWeek );
             DroidPreferences.SetString(context, "DaysOfWeek", daysOfWeek.toString());
             DroidPreferences.SetInteger(context, "timePickerHour", timePicker.getCurrentHour());
             DroidPreferences.SetInteger(context, "timePickerMinute", timePicker.getCurrentMinute());
 
-            alarmIntent = PendingIntent.getBroadcast(context, 0, intent, Others.GetPendingIntentFlags());
+            Calendar calendar = Others.ScheduleAlarm(context, daysOfWeek, timePicker.getCurrentHour(), timePicker.getCurrentMinute());
 
-            Calendar calendar = Calendar.getInstance();
-
-            boolean addDay = false;
-
-            if (timePicker.getCurrentHour() < calendar.getTime().getHours()) {
-                addDay = true;
-            } else if (timePicker.getCurrentHour() == calendar.getTime().getHours()) {
-
-                if (timePicker.getCurrentMinute() < calendar.getTime().getMinutes()) {
-                    addDay = true;
-                }
-            }
-            calendar.set(Calendar.HOUR_OF_DAY, timePicker.getCurrentHour());
-            calendar.set(Calendar.MINUTE, timePicker.getCurrentMinute());
-            if (addDay) {
-                calendar.add(Calendar.DATE, 1);
-            }
-
-            alarmMgr.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), alarmIntent);
             Toast.makeText(context, "Alarme agendado com sucesso! ", Toast.LENGTH_LONG).show();
 
             Log.d("DroidAlarmClock", "Alarme agendado em " + DateFormat.format("yyyyMMdd HH:mm", calendar.getTime()).toString());
             finish();
         } catch (Exception ex) {
-            Toast.makeText(context, "Não foi possivel agendar o alarme. " + ex.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("DroidAlarmClock", "Nao foi possivel agendar o alarme", ex);
+            Toast.makeText(context, "Nao foi possivel agendar o alarme. " + ex.getMessage(), Toast.LENGTH_LONG).show();
         }
 
 
