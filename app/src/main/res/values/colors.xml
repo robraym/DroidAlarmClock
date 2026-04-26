@@ -11,6 +11,7 @@
     <color name="oneUiTextMuted">#A5A7AF</color>
     <color name="oneUiBlue">#4B8DFF</color>
     <color name="oneUiBlueDark">#256DFF</color>
+    <color name="oneUiDroidBatterySection">#4285F4</color>
     <color name="oneUiStroke">#2B2D35</color>
 
     <color name="black_overlay">#66000000</color>
