@@ -1,11 +1,15 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/oneUiBackground</item>
+        <item name="colorPrimaryDark">@color/oneUiBackground</item>
+        <item name="colorAccent">@color/oneUiBlue</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/oneUiBackground</item>
+        <item name="android:windowBackground">@color/oneUiBackground</item>
     </style>
 
     <style name="FullscreenTheme" parent="AppTheme">
@@ -18,6 +22,26 @@
 
     <style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">
         <item name="android:background">@color/black_overlay</item>
+    </style>
+
+    <style name="OneUiDayCheck">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">46dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:layout_gravity">fill_horizontal</item>
+        <item name="android:buttonTint">@color/oneUiBlue</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">4dp</item>
+        <item name="android:textColor">@color/oneUiText</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="OneUiTimePickerTheme" parent="Theme.AppCompat">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:textColorPrimary">@color/oneUiText</item>
+        <item name="android:textColorSecondary">@color/oneUiTextMuted</item>
+        <item name="android:colorAccent">@color/oneUiBlue</item>
+        <item name="colorAccent">@color/oneUiBlue</item>
     </style>
 
 </resources>

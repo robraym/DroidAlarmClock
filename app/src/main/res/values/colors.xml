@@ -4,6 +4,14 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#0099cc</color>
     <color name="colorWhite">#FFFFFF</color>
+    <color name="oneUiBackground">#050506</color>
+    <color name="oneUiSurface">#17181C</color>
+    <color name="oneUiSurfaceSoft">#202127</color>
+    <color name="oneUiText">#F5F6FA</color>
+    <color name="oneUiTextMuted">#A5A7AF</color>
+    <color name="oneUiBlue">#4B8DFF</color>
+    <color name="oneUiBlueDark">#256DFF</color>
+    <color name="oneUiStroke">#2B2D35</color>
 
     <color name="black_overlay">#66000000</color>
 </resources>

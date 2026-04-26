@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 
 android {
     namespace 'ray.droid.com.droidalarmclock'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "ray.droid.com.droidalarmclock"
         minSdk 21
-        targetSdk 35
+        targetSdk 36
         versionCode 3
         versionName "1.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
