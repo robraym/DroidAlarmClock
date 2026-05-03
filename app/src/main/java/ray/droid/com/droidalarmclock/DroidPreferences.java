@@ -25,6 +25,18 @@ public class DroidPreferences {
 
     }
 
+    public static void SetLong(Context context, String chave, long valor) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_ID, 0);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(chave, valor);
+        editor.commit();
+    }
+
+    public static long GetLong(Context context, String chave, long defaultValue) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_ID, 0);
+        return sharedPreferences.getLong(chave, defaultValue);
+    }
+
     public static void SetString(Context context, String chave, String valor) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_ID, 0);
         SharedPreferences.Editor editor = sharedPreferences.edit();

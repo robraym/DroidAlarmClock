@@ -1,9 +1,9 @@
 package ray.droid.com.droidalarmclock;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -18,18 +18,25 @@ public class AlarmBroadcast extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         ArrayList<Integer> days = intent.getIntegerArrayListExtra("DaysOfWeek");
+        if (days == null || days.isEmpty()) {
+            DroidPreferences.SetLong(context, Others.PREF_NEXT_ALARM_TIME, 0);
+            Others.CancelNextAlarmNotification(context);
+            Log.d("DroidAlarmClock", "Alarme ignorado porque nenhum dia da semana foi selecionado");
+            return;
+        }
+
         if (checkDayOfWeek(days)) {
             try {
                 Log.d("DroidAlarmClock", "AlarmBroadcast - OnReceive");
 
-                Intent i = new Intent(Intent.ACTION_MAIN);
-                i.setComponent(new ComponentName(context, FullscreenActivity.class));
-                i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP |
-                        Intent.FLAG_ACTIVITY_NEW_TASK |
-                        Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-                context.startActivity(i);
+                Intent serviceIntent = new Intent(context, AlarmService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(serviceIntent);
+                } else {
+                    context.startService(serviceIntent);
+                }
 
-                Log.d("DroidAlarmClock", "startActivity");
+                Log.d("DroidAlarmClock", "startAlarmService");
             } catch (Exception ex) {
                 Log.d("DroidAlarmClock", "AlarmBroadcast - OnReceive - Erro: " + ex.getMessage());
 
@@ -40,10 +47,6 @@ public class AlarmBroadcast extends BroadcastReceiver {
     }
 
     private boolean checkDayOfWeek(ArrayList<Integer> days) {
-        if (days == null || days.isEmpty()) {
-            return true;
-        }
-
         Calendar calendar = Calendar.getInstance();
         Integer diasemana = calendar.get(Calendar.DAY_OF_WEEK);
 
@@ -51,12 +54,8 @@ public class AlarmBroadcast extends BroadcastReceiver {
     }
 
     private void scheduleNextRepeat(Context context, ArrayList<Integer> days) {
-        if (days == null || days.isEmpty()) {
-            return;
-        }
-
         int hour = DroidPreferences.GetInteger(context, "timePickerHour");
         int minute = DroidPreferences.GetInteger(context, "timePickerMinute");
-        Others.ScheduleAlarm(context, days, hour, minute);
+        Others.ScheduleAlarm(context, days, hour, minute, false);
     }
 }

@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">Alarm Clock</string>
+    <string name="app_name">Alarme</string>
 
-    <string name="title_activity_fullscreen">FullscreenActivity</string>
-    <string name="dummy_button">Dummy Button</string>
+    <string name="title_activity_fullscreen">Alarme tocando</string>
+    <string name="dummy_button">Botão</string>
     <string name="dummy_content">ALARME\nDISPARADO\n</string>
     <string name="alarm_icon">Alarme</string>
     <string name="alarm_ringing_title">Alarme tocando</string>
-    <string name="alarm_ringing_summary">Toque no botao abaixo para parar</string>
+    <string name="alarm_ringing_summary">Toque no botão abaixo para parar</string>
     <string name="stop_alarm">Parar alarme</string>
 </resources>

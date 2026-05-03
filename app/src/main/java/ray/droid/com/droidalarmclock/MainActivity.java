@@ -1,17 +1,12 @@
 package ray.droid.com.droidalarmclock;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.Manifest;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioAttributes;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
+import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.SystemClock;
-import android.provider.SyncStateContract;
-import android.support.annotation.RequiresApi;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.DateFormat;
@@ -26,10 +21,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,9 +37,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView minuteNext;
     private LinearLayout hourColumn;
     private LinearLayout minuteColumn;
-    private long segundos = 1000;
-    private long minutos = segundos * 5;
-    private long horas = minutos * 60;
+    private LinearLayout nextAlarmCard;
+    private TextView nextAlarmTitle;
+    private TextView nextAlarmSummary;
 
     private CheckBox chkSeg;
     private CheckBox chkTer;
@@ -64,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ConfigureSystemInsets();
+        RequestNotificationPermission();
 
         hourPrevious = (TextView) findViewById(R.id.hourPrevious);
         hourValue = (TextView) findViewById(R.id.hourValue);
@@ -73,6 +67,9 @@ public class MainActivity extends AppCompatActivity {
         minuteNext = (TextView) findViewById(R.id.minuteNext);
         hourColumn = (LinearLayout) findViewById(R.id.hourColumn);
         minuteColumn = (LinearLayout) findViewById(R.id.minuteColumn);
+        nextAlarmCard = (LinearLayout) findViewById(R.id.nextAlarmCard);
+        nextAlarmTitle = (TextView) findViewById(R.id.nextAlarmTitle);
+        nextAlarmSummary = (TextView) findViewById(R.id.nextAlarmSummary);
         ConfigureTimeControls();
         Calendar now = Calendar.getInstance();
         selectedHour = now.get(Calendar.HOUR_OF_DAY);
@@ -94,12 +91,12 @@ public class MainActivity extends AppCompatActivity {
         btnAgendar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Others.CancelAlarm(context);
                 SetAlarm();
             }
         });
 
         LoadPreferences();
+        UpdateNextAlarmCard();
     }
 
     private void ConfigureSystemInsets() {
@@ -122,6 +119,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void RequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 10);
+        }
+    }
+
+    private boolean EnsureAlarmCanBypassDoNotDisturb() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager == null || manager.isNotificationPolicyAccessGranted()) {
+            return true;
+        }
+
+        Toast.makeText(context, "Permita acesso ao Não perturbe para o alarme tocar mesmo no silencioso.", Toast.LENGTH_LONG).show();
+        Intent settingsIntent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+        startActivity(settingsIntent);
+        return false;
+    }
+
     private void ConfigureTimeControls() {
         hourColumn.setOnTouchListener(CreateTimeColumnTouchListener(true));
         minuteColumn.setOnTouchListener(CreateTimeColumnTouchListener(false));
@@ -135,10 +155,12 @@ public class MainActivity extends AppCompatActivity {
             public boolean onTouch(View view, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     startY = event.getY();
+                    view.getParent().requestDisallowInterceptTouchEvent(true);
                     return true;
                 }
 
                 if (event.getAction() == MotionEvent.ACTION_UP) {
+                    view.getParent().requestDisallowInterceptTouchEvent(false);
                     float deltaY = event.getY() - startY;
 
                     if (Math.abs(deltaY) > 20) {
@@ -151,6 +173,11 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 }
 
+                if (event.getAction() == MotionEvent.ACTION_CANCEL) {
+                    view.getParent().requestDisallowInterceptTouchEvent(false);
+                    return true;
+                }
+
                 return true;
             }
         };
@@ -159,6 +186,13 @@ public class MainActivity extends AppCompatActivity {
     private void ChangeTimeWithAnimation(final View column, final boolean isHour, final boolean increment) {
         final int direction = increment ? 1 : -1;
 
+        if (isHour) {
+            selectedHour = WrapValue(selectedHour + direction, 24);
+        } else {
+            selectedMinute = WrapValue(selectedMinute + direction, 60);
+        }
+        UpdateTimeControls();
+
         column.animate()
                 .translationY(direction * -18)
                 .alpha(0.72f)
@@ -166,13 +200,6 @@ public class MainActivity extends AppCompatActivity {
                 .withEndAction(new Runnable() {
                     @Override
                     public void run() {
-                        if (isHour) {
-                            selectedHour = WrapValue(selectedHour + direction, 24);
-                        } else {
-                            selectedMinute = WrapValue(selectedMinute + direction, 60);
-                        }
-
-                        UpdateTimeControls();
                         column.setTranslationY(direction * 18);
                         column.animate()
                                 .translationY(0)
@@ -208,6 +235,26 @@ public class MainActivity extends AppCompatActivity {
 
     private String FormatTwoDigits(int value) {
         return String.format("%02d", value);
+    }
+
+    private String BuildScheduleToast(Calendar alarmTime) {
+        return "Alarme agendado para " + DateFormat.format("HH:mm", alarmTime).toString()
+                + ". " + Others.BuildNextAlarmSummary(alarmTime);
+    }
+
+    private void UpdateNextAlarmCard() {
+        Calendar nextAlarm = Others.GetSavedNextAlarm(context);
+        if (nextAlarm == null) {
+            nextAlarmCard.setVisibility(View.VISIBLE);
+            nextAlarmTitle.setText("Nenhum alarme agendado");
+            nextAlarmSummary.setText("Toque em Agendar para atualizar");
+            return;
+        }
+
+        nextAlarmCard.setVisibility(View.VISIBLE);
+        nextAlarmTitle.setText(Others.BuildNextAlarmTitle(nextAlarm));
+        nextAlarmSummary.setText(Others.BuildNextAlarmSummary(nextAlarm));
+        Others.ShowNextAlarmNotification(context, nextAlarm);
     }
 
     private void LoadPreferences()
@@ -283,23 +330,44 @@ public class MainActivity extends AppCompatActivity {
 
     private void SetAlarm() {
         try {
+            if (!EnsureAlarmCanBypassDoNotDisturb()) {
+                return;
+            }
+
             ArrayList<Integer> daysOfWeek = SetDaysOfWeek();
+            if (daysOfWeek.isEmpty()) {
+                ClearAlarmSchedule();
+                return;
+            }
+
             DroidPreferences.SetString(context, "DaysOfWeek", daysOfWeek.toString());
             DroidPreferences.SetInteger(context, "timePickerHour", selectedHour);
             DroidPreferences.SetInteger(context, "timePickerMinute", selectedMinute);
 
             Calendar calendar = Others.ScheduleAlarm(context, daysOfWeek, selectedHour, selectedMinute);
+            UpdateNextAlarmCard();
 
-            Toast.makeText(context, "Alarme agendado com sucesso! ", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, BuildScheduleToast(calendar), Toast.LENGTH_LONG).show();
 
             Log.d("DroidAlarmClock", "Alarme agendado em " + DateFormat.format("yyyyMMdd HH:mm", calendar.getTime()).toString());
             finish();
         } catch (Exception ex) {
-            Log.e("DroidAlarmClock", "Nao foi possivel agendar o alarme", ex);
-            Toast.makeText(context, "Nao foi possivel agendar o alarme. " + ex.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("DroidAlarmClock", "Não foi possível agendar o alarme", ex);
+            Toast.makeText(context, "Não foi possível agendar o alarme. " + ex.getMessage(), Toast.LENGTH_LONG).show();
         }
 
 
+    }
+
+    private void ClearAlarmSchedule() {
+        Others.CancelAlarm(context);
+        DroidPreferences.SetString(context, "DaysOfWeek", "");
+        DroidPreferences.SetInteger(context, "timePickerHour", selectedHour);
+        DroidPreferences.SetInteger(context, "timePickerMinute", selectedMinute);
+        DroidPreferences.SetLong(context, Others.PREF_NEXT_ALARM_TIME, 0);
+        Others.CancelNextAlarmNotification(context);
+        UpdateNextAlarmCard();
+        Toast.makeText(context, "Nenhum alarme agendado.", Toast.LENGTH_LONG).show();
     }
 
     @Override
